@@ -11,9 +11,40 @@ import CoreData
 class TableViewController: UITableViewController {
     
     var tasks: [Task] = []
-
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        let context = getContext()
+        let fetchRequest: NSFetchRequest<Task> = Task.fetchRequest()
+        let sortDescripter = NSSortDescriptor(key: "title", ascending: true)
+        fetchRequest.sortDescriptors = [sortDescripter]
+        
+        do {
+            tasks = try context.fetch(fetchRequest)
+        } catch let error as NSError {
+            print(error.localizedDescription)
+        }
+        
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Метод удаления
+//        let contex = getContext()
+//        let fetchRequest: NSFetchRequest<Task> = Task.fetchRequest()
+//        if let object = try? contex.fetch(fetchRequest) {
+//            for object in object {
+//                contex.delete(object)
+//            }
+//        }
+//
+//        do {
+//            try contex.save()
+//        } catch let error as NSError {
+//            print(error.localizedDescription)
+//        }
         
     }
 
@@ -38,9 +69,7 @@ class TableViewController: UITableViewController {
     }
     
     private func saveTask(withTitle title: String) {
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        let contex = appDelegate.persistentContainer.viewContext
-        
+        let contex = getContext()
         guard let entity = NSEntityDescription
                 .entity(forEntityName: "Task", in: contex) else { return }
         
@@ -49,16 +78,18 @@ class TableViewController: UITableViewController {
         
         do {
             try contex.save()
+            tasks.append(taskObject)
         } catch let error as NSError {
             print(error.localizedDescription)
         }
     }
     
-    // MARK: - Table view data source
-
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+    private func getContext() -> NSManagedObjectContext {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        return appDelegate.persistentContainer.viewContext
     }
+    
+    // MARK: - Table view data source
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return tasks.count
